@@ -1,5 +1,6 @@
 '''Our queue manipulations'''
 
+import time
 import uuid
 import qless
 import simplejson as json
@@ -79,3 +80,20 @@ class Queue(qless.Queue):
     def resize(self, size):
         '''Resize this queue to contain `size` subqueues'''
         return self.client('queue.resize', self.name, size)
+
+    def config(self, key=None, val=None):
+        '''Get, set configuration options'''
+        if key == None:
+            return json.loads(self.client('queue.config', self.name))
+        elif val == None:
+            return json.loads(self.client('queue.config', self.name, key))
+        else:
+            return json.loads(self.client('queue.config', self.name, key, val))
+
+    def __len__(self):
+        return self.client('queue.length', self.name)
+
+    def stats(self, date=None):
+        '''Get some stats about the wait and run times of jobs in the queue'''
+        return json.loads(
+            self.client('queue.stats', self.name, date or repr(time.time())))

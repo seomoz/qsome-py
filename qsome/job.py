@@ -4,6 +4,7 @@ from . import logger
 
 import qless
 import simplejson as json
+from qsome.exceptions import QlessException, LostLockException
 
 
 class Job(qless.Job):
@@ -19,9 +20,31 @@ class Job(qless.Job):
         delay, and dependencies'''
         logger.info('Moving %s to %s from %s' % (
             self.jid, queue, self.queue_name))
-        return self.client('put', queue, self.jid, self.klass_name, self.hash,
-            json.dumps(self.data), delay, 'depends', json.dumps(depends or [])
+        return self.client('queue.put', queue, self.jid, self.klass_name,
+            self.hash, json.dumps(self.data), delay, 'depends',
+            json.dumps(depends or [])
         )
+
+    def heartbeat(self):
+        '''Renew the heartbeat, if possible, and optionally update the job's
+        user data.'''
+        logger.debug('Heartbeating %s (ttl = %s)' % (self.jid, self.ttl))
+        try:
+            self.expires_at = float(self.client('job.heartbeat', self.jid,
+            self.client.worker_name, json.dumps(self.data)) or 0)
+        except QlessException as exc:
+            logger.exception('Lock lost for %s' % self.jid)
+            raise LostLockException(self.jid)
+        logger.debug('Heartbeated %s (ttl = %s)' % (self.jid, self.ttl))
+        return self.expires_at
+
+    def track(self):
+        '''Start tracking this job'''
+        return json.loads(self.client('job.track', 'track', self.jid))
+
+    def untrack(self):
+        '''Stop tracking this job'''
+        return json.loads(self.client('job.track', 'untrack', self.jid))
 
 
 class RecurringJob(qless.RecurringJob):
