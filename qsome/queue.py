@@ -96,4 +96,4 @@ class Queue(qless.Queue):
     def stats(self, date=None):
         '''Get some stats about the wait and run times of jobs in the queue'''
         return json.loads(
-            self.client('queue.stats', self.name, date or repr(time.time())))
+            self.client('queue.stats', self.name, date or str(time.time())))

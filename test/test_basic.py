@@ -24,7 +24,7 @@ class TestBasic(TestQsome):
         self.assertEqual(self.queue.pop(), None)
 
     def test_config(self):
-        '''Make sure we can manipulate the congiruation'''
+        '''Make sure we can manipulate the configuration'''
         # Set this particular configuration value
         config = self.client.config
         config['testing'] = 'foo'
@@ -293,7 +293,7 @@ class TestBasic(TestQsome):
             [q for q in self.client.queues.counts if q['name'] == 'other']), 1)
 
     def test_job_time_expiration(self):
-        '''Colmpleted jobs eventually expire out'''
+        '''Completed jobs eventually expire out'''
         self.client.config['jobs-history'] = -1
         jids = [self.queue.put('Foo', 0, {
             'test': 'job_time_experiation',
